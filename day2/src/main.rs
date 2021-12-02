@@ -33,37 +33,39 @@ impl std::str::FromStr for SubCommand {
 }
 
 fn part1(input: &[&str]) -> i32 {
-    let mut h_pos = 0;
-    let mut depth = 0;
-    for line in input {
-        let command: SubCommand = line.parse().unwrap();
-        match command {
-            SubCommand::Down(amount) => depth += amount,
-            SubCommand::Up(amount) => depth -= amount,
-            SubCommand::Forward(amount) => h_pos += amount,
-            _ => (),
-        }
-    }
-    h_pos * depth
+    let (h, d) =
+        input
+            .iter()
+            .map(|l| l.parse().unwrap())
+            .fold((0, 0), |(mut h, mut d), command| {
+                match command {
+                    SubCommand::Down(amount) => d += amount,
+                    SubCommand::Up(amount) => d -= amount,
+                    SubCommand::Forward(amount) => h += amount,
+                    _ => (),
+                };
+                (h, d)
+            });
+    h * d
 }
 
 fn part2(input: &[&str]) -> i32 {
-    let mut h_pos = 0;
-    let mut depth = 0;
-    let mut aim = 0;
-    for line in input {
-        let command: SubCommand = line.parse().unwrap();
-        match command {
-            SubCommand::Down(amount) => aim += amount,
-            SubCommand::Up(amount) => aim -= amount,
-            SubCommand::Forward(amount) => {
-                h_pos += amount;
-                depth += aim * amount;
-            }
-            _ => (),
-        }
-    }
-    h_pos * depth
+    let (h, d, _) = input.iter().map(|l| l.parse().unwrap()).fold(
+        (0, 0, 0),
+        |(mut h, mut d, mut aim), command| {
+            match command {
+                SubCommand::Down(amount) => aim += amount,
+                SubCommand::Up(amount) => aim -= amount,
+                SubCommand::Forward(amount) => {
+                    h += amount;
+                    d += aim * amount;
+                }
+                _ => (),
+            };
+            (h, d, aim)
+        },
+    );
+    h * d
 }
 
 #[cfg(test)]
