@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 fn main() {
     let input: Vec<_> = include_str!("../input.txt").lines().collect();
     println!("part1: {}", part1(&input));
@@ -7,42 +6,50 @@ fn main() {
 
 fn part1(input: &[&str]) -> usize {
     let cols = input[0].len();
-    let counts = input.iter().fold(HashMap::new(), |mut h, bits| {
-        for (index, bit) in bits.chars().enumerate() {
-            let item = h.entry(index).or_insert_with(String::new);
-            item.push(bit);
-        }
-        h
-    });
-    let mut g_rate = String::new();
-    let mut e_rate = String::new();
+    let mask = 2_u32.pow(cols as u32) - 1;
+    let mut g_rate = 0;
     for i in 0..cols {
-        let (zeroes, ones) =
-            counts
-                .get(&i)
-                .unwrap()
-                .chars()
-                .fold((0, 0), |(mut zeroes, mut ones), c| {
-                    match c {
-                        '1' => ones += 1,
-                        '0' => zeroes += 1,
-                        _ => unreachable!(),
-                    }
-                    (zeroes, ones)
-                });
-        if zeroes > ones {
-            g_rate.push('0');
-            e_rate.push('1');
-        } else {
-            g_rate.push('1');
-            e_rate.push('0');
+        let mut count = 0;
+        for &num in input {
+            count += num[i..=i].parse::<i32>().unwrap();
         }
+        g_rate = g_rate << 1
+            | (match count > (input.len() / 2) as i32 {
+                true => 1,
+                false => 0,
+            })
     }
-    usize::from_str_radix(&g_rate, 2).unwrap() * usize::from_str_radix(&e_rate, 2).unwrap()
+    let e_rate = g_rate ^ mask;
+    (g_rate * e_rate) as usize
 }
 
 fn part2(input: &[&str]) -> usize {
-    oxygen_rating(input) * scrubber_rating(input)
+    // Most common or a 1
+    let oxy_cmp = |(zeroes, ones)| ones >= zeroes;
+    // least common or a 0
+    let c02_cmp = |(zeroes, ones)| zeroes > ones;
+    // oxygen_rating(input) * scrubber_rating(input)
+    get_rating(input, oxy_cmp) * get_rating(input, c02_cmp)
+}
+
+fn get_rating<F>(input: &[&str], pred: F) -> usize
+where
+    F: Fn((usize, usize)) -> bool,
+{
+    let positions = input[0].len();
+    let mut items = input.to_owned();
+    for i in 0..positions {
+        let (zeroes, ones) = count_bits(&items, i);
+        let next_bit = if pred((zeroes, ones)) { "1" } else { "0" };
+        items = items
+            .into_iter()
+            .filter(|item| &item[i..=i] == next_bit)
+            .collect();
+        if items.len() == 1 {
+            break;
+        }
+    }
+    usize::from_str_radix(items[0], 2).unwrap()
 }
 
 fn count_bits(input: &[&str], column: usize) -> (usize, usize) {
@@ -54,62 +61,6 @@ fn count_bits(input: &[&str], column: usize) -> (usize, usize) {
         }
         (zeroes, ones)
     })
-}
-
-fn oxygen_rating(input: &[&str]) -> usize {
-    let positions = input[0].len();
-    let mut items = input.to_owned();
-    for i in 0..positions {
-        let (zeroes, ones) = count_bits(&items, i);
-        items = if zeroes == ones {
-            items
-                .into_iter()
-                .filter(|item| &item[i..=i] == "1")
-                .collect()
-        } else if zeroes > ones {
-            items
-                .into_iter()
-                .filter(|item| &item[i..=i] == "0")
-                .collect()
-        } else {
-            items
-                .into_iter()
-                .filter(|item| &item[i..=i] == "1")
-                .collect()
-        };
-        if items.len() == 1 {
-            break;
-        }
-    }
-    usize::from_str_radix(items[0], 2).unwrap()
-}
-
-fn scrubber_rating(input: &[&str]) -> usize {
-    let positions = input[0].len();
-    let mut items = input.to_owned();
-    for i in 0..positions {
-        let (zeroes, ones) = count_bits(&items, i);
-        items = if zeroes == ones {
-            items
-                .into_iter()
-                .filter(|item| &item[i..=i] == "0")
-                .collect()
-        } else if zeroes > ones {
-            items
-                .into_iter()
-                .filter(|item| &item[i..=i] == "1")
-                .collect()
-        } else {
-            items
-                .into_iter()
-                .filter(|item| &item[i..=i] == "0")
-                .collect()
-        };
-        if items.len() == 1 {
-            break;
-        }
-    }
-    usize::from_str_radix(items[0], 2).unwrap()
 }
 
 #[cfg(test)]
