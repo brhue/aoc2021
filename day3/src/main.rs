@@ -2,6 +2,7 @@ use std::collections::HashMap;
 fn main() {
     let input: Vec<_> = include_str!("../input.txt").lines().collect();
     println!("part1: {}", part1(&input));
+    println!("part2: {}", part2(&input));
 }
 
 fn part1(input: &[&str]) -> usize {
@@ -40,6 +41,77 @@ fn part1(input: &[&str]) -> usize {
     usize::from_str_radix(&g_rate, 2).unwrap() * usize::from_str_radix(&e_rate, 2).unwrap()
 }
 
+fn part2(input: &[&str]) -> usize {
+    oxygen_rating(input) * scrubber_rating(input)
+}
+
+fn count_bits(input: &[&str], column: usize) -> (usize, usize) {
+    input.iter().fold((0, 0), |(mut zeroes, mut ones), item| {
+        match &item[column..column + 1] {
+            "0" => zeroes += 1,
+            "1" => ones += 1,
+            _ => unreachable!(),
+        }
+        (zeroes, ones)
+    })
+}
+
+fn oxygen_rating(input: &[&str]) -> usize {
+    let positions = input[0].len();
+    let mut items = input.to_owned();
+    for i in 0..positions {
+        let (zeroes, ones) = count_bits(&items, i);
+        items = if zeroes == ones {
+            items
+                .into_iter()
+                .filter(|item| &item[i..=i] == "1")
+                .collect()
+        } else if zeroes > ones {
+            items
+                .into_iter()
+                .filter(|item| &item[i..=i] == "0")
+                .collect()
+        } else {
+            items
+                .into_iter()
+                .filter(|item| &item[i..=i] == "1")
+                .collect()
+        };
+        if items.len() == 1 {
+            break;
+        }
+    }
+    usize::from_str_radix(items[0], 2).unwrap()
+}
+
+fn scrubber_rating(input: &[&str]) -> usize {
+    let positions = input[0].len();
+    let mut items = input.to_owned();
+    for i in 0..positions {
+        let (zeroes, ones) = count_bits(&items, i);
+        items = if zeroes == ones {
+            items
+                .into_iter()
+                .filter(|item| &item[i..=i] == "0")
+                .collect()
+        } else if zeroes > ones {
+            items
+                .into_iter()
+                .filter(|item| &item[i..=i] == "1")
+                .collect()
+        } else {
+            items
+                .into_iter()
+                .filter(|item| &item[i..=i] == "0")
+                .collect()
+        };
+        if items.len() == 1 {
+            break;
+        }
+    }
+    usize::from_str_radix(items[0], 2).unwrap()
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -64,5 +136,11 @@ mod test {
             // .map(|b| usize::from_str_radix(b, 2).unwrap())
             .collect();
         assert_eq!(part1(&input), 198)
+    }
+
+    #[test]
+    fn test_part2() {
+        let input: Vec<_> = EXAMPLE.lines().collect();
+        assert_eq!(part2(&input), 230)
     }
 }
