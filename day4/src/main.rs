@@ -1,6 +1,7 @@
 fn main() {
     let input: Vec<_> = include_str!("../input.txt").split("\n\n").collect();
-    println!("part1: {}", part1(&input[..]))
+    println!("part1: {}", part1(&input[..]));
+    println!("part2: {}", part2(&input[..]))
 }
 
 fn part1(input: &[&str]) -> u32 {
@@ -27,6 +28,39 @@ fn part1(input: &[&str]) -> u32 {
                 return unmarked_sum * number;
             }
         }
+    }
+    0
+}
+
+fn part2(input: &[&str]) -> u32 {
+    let numbers: Vec<_> = input[0]
+        .split(',')
+        .map(|n| n.parse::<u32>().unwrap())
+        .collect();
+
+    let mut bingo_boards: Vec<_> = input[1..]
+        .iter()
+        .map(|&b| BingoBoard::new(b.trim()))
+        .collect();
+    for number in numbers {
+        let len = bingo_boards.len();
+        for board in bingo_boards.iter_mut() {
+            board.mark_board(number);
+            if board.check_board() && len == 1 {
+                let unmarked_sum: u32 = board
+                    .board
+                    .iter()
+                    .enumerate()
+                    .filter(|&(i, _)| !board.marked[i])
+                    .map(|(_, &s)| s)
+                    .sum();
+                return unmarked_sum * number;
+            }
+        }
+        bingo_boards = bingo_boards
+            .into_iter()
+            .filter(|b| !b.check_board())
+            .collect();
     }
     0
 }
@@ -103,5 +137,11 @@ mod test {
     fn example_part1() {
         let input: Vec<_> = EXAMPLE.split("\n\n").collect();
         assert_eq!(4512, part1(&input[..]))
+    }
+
+    #[test]
+    fn example_part2() {
+        let input: Vec<_> = EXAMPLE.split("\n\n").collect();
+        assert_eq!(1924, part2(&input[..]))
     }
 }
