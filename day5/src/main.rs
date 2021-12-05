@@ -5,7 +5,7 @@ fn main() {
 }
 
 fn part1(input: &str) -> usize {
-    let pairs = input
+    let diagram = input
         .lines()
         .map(|l| {
             let points = l.split_once(" -> ").unwrap();
@@ -16,33 +16,22 @@ fn part1(input: &str) -> usize {
             (p1, p2)
         })
         // keep only horz or vert lines
-        .filter(|points| points.0 .0 == points.1 .0 || points.0 .1 == points.1 .1)
-        .collect::<Vec<_>>();
-    let mut diagram: Vec<Vec<u32>> = vec![vec![0; 1000]; 1000];
-    for pair in pairs {
-        let p1 = pair.0;
-        let p2 = pair.1;
-        if p1.0 == p2.0 {
-            let mut y1 = p1.1;
-            let mut y2 = p2.1;
-            if y1 > y2 {
-                std::mem::swap(&mut y1, &mut y2);
-            }
-            for i in y1..=y2 {
-                diagram[i as usize][p1.0 as usize] += 1;
-            }
-        }
-        if p1.1 == p2.1 {
-            let mut x1 = p1.0;
-            let mut x2 = p2.0;
-            if x1 > x2 {
-                std::mem::swap(&mut x1, &mut x2);
-            }
-            for i in x1..=x2 {
-                diagram[p1.1 as usize][i as usize] += 1;
-            }
-        }
-    }
+        .filter(|((x, y), (xx, yy))| x == xx || y == yy)
+        .fold(
+            vec![vec![0u8; 1000]; 1000],
+            |mut diagram, ((x, y), (xx, yy))| {
+                if x == xx {
+                    for i in y.min(yy)..=yy.max(y) {
+                        diagram[i as usize][x as usize] += 1;
+                    }
+                } else {
+                    for i in x.min(xx)..=xx.max(x) {
+                        diagram[y as usize][i as usize] += 1;
+                    }
+                }
+                diagram
+            },
+        );
     diagram
         .iter()
         .map(|r| r.iter().filter(|spot| *spot > &1).count())
