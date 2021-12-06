@@ -23,13 +23,14 @@ fn simulate(mut fish: [usize; 9], days: usize) -> usize {
 }
 
 fn part1(input: &str) -> usize {
-    let fish = input.split(',').map(|f| f.parse::<u8>().unwrap()).fold(
-        [0usize; 9],
-        |mut fish_by_day, fish| {
-            fish_by_day[fish as usize] += 1;
-            fish_by_day
-        },
-    );
+    let fish =
+        input
+            .split(',')
+            .map(|f| f.parse::<u8>().unwrap())
+            .fold([0; 9], |mut fish_by_day, fish| {
+                fish_by_day[fish as usize] += 1;
+                fish_by_day
+            });
     simulate(fish, 80)
 }
 
