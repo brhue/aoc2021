@@ -34,7 +34,7 @@ fn calculate_fuel2(crabs: &[i32]) -> i32 {
                 .iter()
                 .map(|c| {
                     let diff = (c - h_pos).abs();
-                    (1..=diff).sum::<i32>()
+                    (diff.pow(2) + diff) / 2 // (n^2 + n) / 2
                 })
                 .sum()
         })
