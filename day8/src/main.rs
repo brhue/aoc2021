@@ -49,10 +49,7 @@ fn part2(input: &str) -> usize {
             key[3] = rest.remove(three);
             let nine = rest
                 .iter()
-                .position(|pat| {
-                    key[3].chars().all(|c| pat.contains(c))
-                        && key[4].chars().all(|c| pat.contains(c))
-                })
+                .position(|pat| key[3].chars().all(|c| pat.contains(c)))
                 .unwrap();
             key[9] = rest.remove(nine);
             let five = rest
