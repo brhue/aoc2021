@@ -19,19 +19,15 @@ fn part1(input: &str) -> usize {
     count
 }
 
-// pabcdefg
-// 00000000
-
 fn part2(input: &str) -> usize {
     let sum = input
         .lines()
         .map(|line| {
             let (patterns, output) = line.split_once(" | ").unwrap();
-            let (mut easy, mut rest): (Vec<&str>, Vec<&str>) = patterns
+            let (easy, mut rest): (Vec<&str>, Vec<&str>) = patterns
                 .trim()
                 .split_whitespace()
                 .partition(|p| matches!(p.len(), 2 | 3 | 4 | 7));
-            easy.sort_by_key(|a| a.len());
             let mut key = [""; 10];
             for pattern in easy {
                 match pattern.len() {
