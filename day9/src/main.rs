@@ -46,34 +46,12 @@ fn part2(input: &str) -> usize {
 }
 
 fn is_low_point(map: &[Vec<u8>], x: usize, y: usize) -> bool {
-    if y == 0 {
-        if x == 0 {
-            map[y][x] < map[y][x + 1] && map[y][x] < map[y + 1][x]
-        } else if x == map[y].len() - 1 {
-            map[y][x] < map[y][x - 1] && map[y][x] < map[y + 1][x]
-        } else {
-            map[y][x] < map[y][x - 1] && map[y][x] < map[y][x + 1] && map[y][x] < map[y + 1][x]
-        }
-    } else if x == map[y].len() - 1 {
-        if y == map.len() - 1 {
-            map[y][x] < map[y][x - 1] && map[y][x] < map[y - 1][x]
-        } else {
-            map[y][x] < map[y][x - 1] && map[y][x] < map[y - 1][x] && map[y][x] < map[y + 1][x]
-        }
-    } else if y == map.len() - 1 {
-        if x == 0 {
-            map[y][x] < map[y][x + 1] && map[y][x] < map[y - 1][x]
-        } else {
-            map[y][x] < map[y][x - 1] && map[y][x] < map[y][x + 1] && map[y][x] < map[y - 1][x]
-        }
-    } else if x == 0 {
-        map[y][x] < map[y][x + 1] && map[y][x] < map[y - 1][x] && map[y][x] < map[y + 1][x]
-    } else {
-        map[y][x] < map[y][x - 1]
-            && map[y][x] < map[y][x + 1]
-            && map[y][x] < map[y - 1][x]
-            && map[y][x] < map[y + 1][x]
-    }
+    let point = map[y][x];
+    let top = y == 0 || point < map[y - 1][x];
+    let right = x == map[0].len() - 1 || point < map[y][x + 1];
+    let bottom = y == map.len() - 1 || point < map[y + 1][x];
+    let left = x == 0 || point < map[y][x - 1];
+    top && right && bottom && left
 }
 
 // Adapted flood fill algorithm from https://en.wikipedia.org/wiki/Flood_fill
