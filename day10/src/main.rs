@@ -8,9 +8,9 @@ fn part1(input: &str) -> usize {
     let sum_of_bad = input
         .lines()
         .map(is_corrupted)
-        .filter(|c| c.0)
+        .filter(|c| c.is_some())
         .map(|c| {
-            let bad_char = c.1.unwrap();
+            let bad_char = c.unwrap();
             match bad_char {
                 ')' => 3,
                 ']' => 57,
@@ -24,9 +24,9 @@ fn part1(input: &str) -> usize {
 }
 
 fn part2(input: &str) -> usize {
-    let incomplete_lines: Vec<&str> = input.lines().filter(|l| !is_corrupted(l).0).collect();
-    let mut scores: Vec<u64> = incomplete_lines
-        .iter()
+    let mut scores: Vec<u64> = input
+        .lines()
+        .filter(|l| is_corrupted(l).is_none())
         .map(|l| {
             let mut stack = vec![];
             let mut chars = l.chars();
@@ -49,38 +49,20 @@ fn part2(input: &str) -> usize {
                     _ => stack.push(char),
                 }
             }
-            stack
-                .iter()
-                .rev()
-                .map(|c| match c {
-                    '(' => ")",
-                    '[' => "]",
-                    '{' => "}",
-                    '<' => ">",
-                    _ => unreachable!(),
-                })
-                .collect::<Vec<_>>()
-                .join("")
-        })
-        .map(|l| {
-            let mut score = 0u64;
-            for char in l.chars() {
-                match char {
-                    ')' => score = (score * 5) + 1,
-                    ']' => score = (score * 5) + 2,
-                    '}' => score = (score * 5) + 3,
-                    '>' => score = (score * 5) + 4,
-                    _ => unreachable!(),
-                }
-            }
-            score
+            stack.iter().rev().fold(0, |score, c| match c {
+                '(' => (score * 5) + 1,
+                '[' => (score * 5) + 2,
+                '{' => (score * 5) + 3,
+                '<' => (score * 5) + 4,
+                _ => unreachable!(),
+            })
         })
         .collect();
     scores.sort_unstable();
     scores[scores.len() / 2_usize] as usize
 }
 
-fn is_corrupted(line: &str) -> (bool, Option<char>) {
+fn is_corrupted(line: &str) -> Option<char> {
     let mut stack = vec![];
     let mut chars = line.chars();
     stack.push(chars.next().unwrap());
@@ -89,32 +71,32 @@ fn is_corrupted(line: &str) -> (bool, Option<char>) {
         match char {
             ')' => {
                 if stack.last().unwrap() != &'(' {
-                    return (true, Some(char));
+                    return Some(char);
                 }
                 stack.pop();
             }
             ']' => {
                 if stack.last().unwrap() != &'[' {
-                    return (true, Some(char));
+                    return Some(char);
                 }
                 stack.pop();
             }
             '}' => {
                 if stack.last().unwrap() != &'{' {
-                    return (true, Some(char));
+                    return Some(char);
                 }
                 stack.pop();
             }
             '>' => {
                 if stack.last().unwrap() != &'<' {
-                    return (true, Some(char));
+                    return Some(char);
                 }
                 stack.pop();
             }
             _ => stack.push(char),
         }
     }
-    (false, None)
+    None
 }
 
 #[cfg(test)]
@@ -148,13 +130,7 @@ mod test {
         let out: Vec<_> = input.lines().map(is_corrupted).collect();
         assert_eq!(
             &out[..],
-            [
-                (true, Some('}')),
-                (true, Some(')')),
-                (true, Some(']')),
-                (true, Some(')')),
-                (true, Some('>'))
-            ]
+            [Some('}'), Some(')'), Some(']'), Some(')'), Some('>')]
         );
     }
 
