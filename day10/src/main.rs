@@ -17,7 +17,10 @@ fn main() {
 fn part1(input: &str) -> usize {
     let sum_of_bad = input
         .lines()
-        .filter_map(is_corrupted)
+        .filter_map(|l| match parse_line(l) {
+            LineStatus::Corrupted(c) => Some(c),
+            _ => None,
+        })
         .map(|c| match c {
             b')' => 3,
             b']' => 57,
@@ -32,43 +35,28 @@ fn part1(input: &str) -> usize {
 fn part2(input: &str) -> usize {
     let mut scores: Vec<u64> = input
         .lines()
-        .filter(|l| is_corrupted(l).is_none())
-        .map(|l| {
-            let mut stack = Vec::with_capacity(110);
-            let mut chars = l.bytes();
-            stack.push(chars.next().unwrap());
-
-            for char in chars {
-                match char {
-                    b')' => {
-                        stack.pop();
-                    }
-                    b']' => {
-                        stack.pop();
-                    }
-                    b'}' => {
-                        stack.pop();
-                    }
-                    b'>' => {
-                        stack.pop();
-                    }
-                    _ => stack.push(char),
-                }
-            }
-            stack.iter().rev().fold(0, |score, c| match c {
+        .filter_map(|l| match parse_line(l) {
+            LineStatus::Incomplete(s) => Some(s.iter().rev().fold(0, |score, c| match c {
                 b'(' => (score * 5) + 1,
                 b'[' => (score * 5) + 2,
                 b'{' => (score * 5) + 3,
                 b'<' => (score * 5) + 4,
                 _ => unreachable!(),
-            })
+            })),
+            _ => None,
         })
         .collect();
     scores.sort_unstable();
     scores[scores.len() / 2_usize] as usize
 }
 
-fn is_corrupted(line: &str) -> Option<u8> {
+#[derive(Debug, PartialEq)]
+enum LineStatus {
+    Corrupted(u8),
+    Incomplete(Vec<u8>),
+}
+
+fn parse_line(line: &str) -> LineStatus {
     let mut stack = Vec::with_capacity(110);
     let mut chars = line.bytes();
     stack.push(chars.next().unwrap());
@@ -77,28 +65,28 @@ fn is_corrupted(line: &str) -> Option<u8> {
         match char {
             b')' => {
                 if stack.pop().unwrap() != b'(' {
-                    return Some(char);
+                    return LineStatus::Corrupted(char);
                 }
             }
             b']' => {
                 if stack.pop().unwrap() != b'[' {
-                    return Some(char);
+                    return LineStatus::Corrupted(char);
                 }
             }
             b'}' => {
                 if stack.pop().unwrap() != b'{' {
-                    return Some(char);
+                    return LineStatus::Corrupted(char);
                 }
             }
             b'>' => {
                 if stack.pop().unwrap() != b'<' {
-                    return Some(char);
+                    return LineStatus::Corrupted(char);
                 }
             }
             _ => stack.push(char),
         }
     }
-    None
+    LineStatus::Incomplete(stack)
 }
 
 #[cfg(test)]
@@ -129,10 +117,16 @@ mod test {
 [<(<(<(<{}))><([]([]()
 <{([([[(<>()){}]>(<<{{";
 
-        let out: Vec<_> = input.lines().map(is_corrupted).collect();
+        let out: Vec<_> = input.lines().map(parse_line).collect();
         assert_eq!(
             &out[..],
-            [Some(b'}'), Some(b')'), Some(b']'), Some(b')'), Some(b'>')]
+            [
+                LineStatus::Corrupted(b'}'),
+                LineStatus::Corrupted(b')'),
+                LineStatus::Corrupted(b']'),
+                LineStatus::Corrupted(b')'),
+                LineStatus::Corrupted(b'>')
+            ]
         );
     }
 
