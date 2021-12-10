@@ -33,13 +33,13 @@ fn part2(input: &str) -> usize {
     for y in 0..map.len() {
         for x in 0..map[0].len() {
             if is_low_point(&map[..], x, y) {
-                low_points.push((y, x))
+                low_points.push((x, y))
             }
         }
     }
     let mut basin_sizes = low_points
         .iter()
-        .map(|p| calculate_basin(&map[..], p.1, p.0))
+        .map(|p| calculate_basin(&map[..], p.0, p.1))
         .collect::<Vec<_>>();
     basin_sizes.sort_unstable();
     basin_sizes.iter().rev().take(3).product()
@@ -56,22 +56,24 @@ fn is_low_point(map: &[Vec<u8>], x: usize, y: usize) -> bool {
 
 // Adapted flood fill algorithm from https://en.wikipedia.org/wiki/Flood_fill
 fn calculate_basin(map: &[Vec<u8>], x: usize, y: usize) -> usize {
+    let neighbors = [[0, -1], [1, 0], [0, 1], [-1, 0]];
     let mut size = 0;
     let mut visited = HashSet::new();
     let mut queue = VecDeque::new();
-    queue.push_back((y, x));
+    queue.push_back((x as i32, y as i32));
     while !queue.is_empty() {
         let node = queue.pop_front().unwrap();
 
-        if let Some(row) = map.get(node.0) {
-            if let Some(val) = row.get(node.1) {
-                if *val != 9 && !visited.contains(&node) {
-                    visited.insert(node);
-                    size += 1;
-                    queue.push_back((node.0, node.1 - 1));
-                    queue.push_back((node.0, node.1 + 1));
-                    queue.push_back((node.0 - 1, node.1));
-                    queue.push_back((node.0 + 1, node.1));
+        if map[node.1 as usize][node.0 as usize] != 9 && !visited.contains(&node) {
+            visited.insert(node);
+            size += 1;
+
+            for [dx, dy] in neighbors {
+                let xx = node.0 as i32 + dx;
+                let yy = node.1 as i32 + dy;
+
+                if 0 <= xx && xx < map[0].len() as i32 && 0 <= yy && yy < map.len() as i32 {
+                    queue.push_back((xx, yy))
                 }
             }
         }
