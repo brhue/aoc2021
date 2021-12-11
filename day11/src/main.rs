@@ -1,7 +1,17 @@
+use std::time::Instant;
+
 fn main() {
     let input = include_str!("../input.txt");
+
+    let now = Instant::now();
     println!("part1: {}", part1(input));
+    let elapsed = now.elapsed();
+    println!("part1 took {}µs", elapsed.as_micros());
+
+    let now = Instant::now();
     println!("part2: {}", part2(input));
+    let elapsed = now.elapsed();
+    println!("part2 took {}µs", elapsed.as_micros());
 }
 
 #[derive(Debug)]
