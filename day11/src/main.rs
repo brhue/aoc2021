@@ -59,11 +59,11 @@ fn part2(input: &str) -> usize {
         .collect();
     let mut steps_taken = 0;
     loop {
-        step(&mut map[..]);
+        let flashes = step(&mut map[..]);
         steps_taken += 1;
-        let synced = map.iter().all(|row| row.iter().all(|o| o.energy == 0));
 
-        if synced {
+        // 100 is input size
+        if flashes == 100 {
             break;
         }
     }
