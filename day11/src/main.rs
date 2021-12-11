@@ -95,6 +95,7 @@ fn step(octos: &mut [Vec<Octo>]) -> usize {
 
     let mut flashes = 0;
     while need_to_flash {
+        need_to_flash = false;
         for y in 0..octos.len() {
             for x in 0..octos[0].len() {
                 let mut o = &mut octos[y as usize][x as usize];
@@ -102,7 +103,6 @@ fn step(octos: &mut [Vec<Octo>]) -> usize {
                     // we flashing
                     flashes += 1;
                     o.flashed = true;
-                    // need_to_flash = false;
                     for [dx, dy] in neighbors {
                         let xx = x as i32 + dx;
                         let yy = y as i32 + dy;
@@ -111,15 +111,17 @@ fn step(octos: &mut [Vec<Octo>]) -> usize {
                             let yy = yy as usize;
                             let n = &mut octos[yy][xx];
                             n.energy += 1;
+                            if n.energy > 9 && !n.flashed {
+                                need_to_flash = true
+                            }
                         }
                     }
                 }
             }
         }
-
-        need_to_flash = octos
-            .iter()
-            .any(|row| row.iter().any(|o| o.energy > 9 && !o.flashed))
+        if !need_to_flash {
+            break;
+        }
     }
 
     for y in 0..octos.len() {
